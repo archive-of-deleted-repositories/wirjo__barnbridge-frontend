@@ -80,6 +80,9 @@ jobs:
 
     - name: Invalidate CloudFront cache
       run: |
+        #!/usr/bin/env bash
+        set -eou pipefail
+
         CF_DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items!=null] | [?contains(Aliases.Items, 'dev.app.barnbridge.com')].Id | [0]" | tr -d \")
         echo "Clearing cache for ${CF_DIST_ID}..."
         CF_INVALIDATION_ID=$(aws cloudfront create-invalidation --distribution-id ${DIST_ID} --paths "/*" | jq -r '.Invalidation.Id')
