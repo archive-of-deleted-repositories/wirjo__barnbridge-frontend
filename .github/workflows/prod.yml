@@ -1,0 +1,92 @@
+name: Deploy prod
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup Nodejs
+      uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+
+    - name: Cache dependencies
+      id: node-cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          **/node_modules
+        key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install dependencies
+      if: steps.node-cache.outputs.cache-hit != 'true'
+      run: npm ci
+
+    - name: Build
+      run: npm run build
+      env:
+        CI: false
+        REACT_APP_HTML_TITLE: 'BarnBridge'
+        REACT_APP_WEB3_CHAIN_ID: 1
+        REACT_APP_WEB3_POLLING_INTERVAL: 12000
+        REACT_APP_WEB3_RPC_ID: '6c58700fe84943eb83c4cd5c23dff3d8'
+        REACT_APP_WEB3_FORTMATIC_API_KEY: '***REMOVED***'
+        REACT_APP_WEB3_FORTMATIC_SITE_VERIFICATION: 'OHQ0iUG4unpgCMFw'
+        REACT_APP_WEB3_PORTIS_APP_ID: 'b0b0f776-bbf6-458c-a175-6483e0c452b7'
+        REACT_APP_WEB3_SQUARELINK_CLIENT_ID: '40bed2a45063b4f690c6'
+        REACT_APP_CONTRACT_DAI_ADDR: '***REMOVED***'
+        REACT_APP_CONTRACT_USDC_ADDR: '***REMOVED***'
+        REACT_APP_CONTRACT_SUSD_ADDR: '***REMOVED***'
+        REACT_APP_CONTRACT_BOND_ADDR: '***REMOVED***'
+        REACT_APP_CONTRACT_UNISWAP_V2_ADDR: '***REMOVED***'
+        REACT_APP_CONTRACT_STAKING_ADDR: '0xb0Fa2BeEe3Cf36a7Ac7E99B885b48538Ab364853'
+        REACT_APP_CONTRACT_COMMUNITY_VAULT_ADDR: '0xA3C299eEE1998F45c20010276684921EBE6423D9'
+        REACT_APP_CONTRACT_YIELD_FARM_ADDR: '0xB3F7abF8FA1Df0fF61C5AC38d35e20490419f4bb'
+        REACT_APP_CONTRACT_YIELD_FARM_LP_ADDR: '0xC25c37c387C5C909a94055F4f16184ca325D3a76'
+        REACT_APP_CONTRACT_ETH_ORACLE_ADDR: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419'
+        REACT_APP_THEGRAPH_BB_SUBGRAPH_URL: 'https://api.thegraph.com/subgraphs/name/barnbridge/barnbridge-contracts'
+
+    - name: Save artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: frontend
+        path: build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: frontend
+
+    - name: Configure AWS credetials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Deploy static site to S3
+      run: ls -l && aws s3 sync . s3://prod-appbarnbridgecom-origin --delete
+
+    - name: Invalidate CloudFront cache
+      run: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        CF_DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items!=null] | [?contains(Aliases.Items, 'app.barnbridge.com')].Id | [0]" | tr -d \")
+        echo "Clearing cache for ${CF_DIST_ID}..."
+        CF_INVALIDATION_ID=$(aws cloudfront create-invalidation --distribution-id ${CF_DIST_ID} --paths "/*" | jq -r '.Invalidation.Id')
+        while [ $(aws cloudfront get-invalidation --distribution-id ${CF_DIST_ID} --id ${CF_INVALIDATION_ID} | jq -r '.Invalidation.Status') != "Completed" ]; do
+          echo "CF_DIST_ID=${CF_DIST_ID} CF_INVALIDATION_ID=${CF_INVALIDATION_ID}: Waiting for CloudFront cache invalidation to complete..."
+          sleep 5
+        done
