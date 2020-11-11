@@ -12,7 +12,7 @@ export const CONTRACT_YIELD_FARM_ADDR = String(process.env.REACT_APP_CONTRACT_YI
 
 type YieldFarmContractData = {
   totalEpochs?: number;
-  totalRewards?: BigNumber;
+  totalReward?: BigNumber;
   epochReward?: BigNumber;
   currentEpoch?: number;
   bondReward?: BigNumber;
@@ -32,7 +32,7 @@ export type YieldFarmContract = YieldFarmContractData & {
 
 const InitialData: YieldFarmContractData = {
   totalEpochs: undefined,
-  totalRewards: undefined,
+  totalReward: undefined,
   epochReward: undefined,
   currentEpoch: undefined,
   bondReward: undefined,
@@ -59,7 +59,7 @@ export function useYieldFarmContract(): YieldFarmContract {
   const [data, setData] = React.useState<YieldFarmContractData>(InitialData);
 
   useAsyncEffect(async () => {
-    let [totalEpochs, totalRewards, currentEpoch] = await contract.batch([
+    let [totalEpochs, totalReward, currentEpoch] = await contract.batch([
       {
         method: 'NR_OF_EPOCHS',
         transform: (value: string) => Number(value),
@@ -76,7 +76,7 @@ export function useYieldFarmContract(): YieldFarmContract {
 
     currentEpoch = Math.min(currentEpoch, totalEpochs);
 
-    const epochReward = totalEpochs !== 0 ? totalRewards.div(totalEpochs) : ZERO_BIG_NUMBER;
+    const epochReward = totalEpochs !== 0 ? totalReward.div(totalEpochs) : ZERO_BIG_NUMBER;
 
     let bondReward = ZERO_BIG_NUMBER;
 
@@ -88,7 +88,7 @@ export function useYieldFarmContract(): YieldFarmContract {
     setData(prevState => ({
       ...prevState,
       totalEpochs,
-      totalRewards,
+      totalReward,
       epochReward,
       currentEpoch,
       bondReward,
