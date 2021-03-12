@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AntdBadge from 'antd/lib/badge';
 import AntdForm from 'antd/lib/form';
 
 import Form from 'components/antd/form';
@@ -22,11 +23,12 @@ const InitialFormValues: HistoryTableFilterValues = {
 
 type Props = {
   originators: SYPool[];
-  onFiltersApply: (values: HistoryTableFilterValues) => void;
+  value?: HistoryTableFilterValues;
+  onChange: (values: HistoryTableFilterValues) => void;
 };
 
 const HistoryTableFilter: React.FC<Props> = props => {
-  const { originators, onFiltersApply } = props;
+  const { originators, value = InitialFormValues, onChange } = props;
   const [form] = AntdForm.useForm<HistoryTableFilterValues>();
   const [filtersVisible, setFiltersVisible] = useState<boolean>(false);
 
@@ -62,16 +64,40 @@ const HistoryTableFilter: React.FC<Props> = props => {
         label: 'All transactions',
         value: 'all',
       },
-      ...Array.from(HistoryTypes.entries()).map(([value, label]) => ({
+      ...Array.from(HistoryTypes.entries()).map(([type, label]) => ({
         label,
-        value,
+        value: type,
       })),
     ];
   }, []);
 
+  const countApplied = React.useMemo(() => {
+    let count = 0;
+
+    if (value.originator !== 'all') {
+      count += 1;
+    }
+
+    if (value.token !== 'all') {
+      count += 1;
+    }
+
+    if (value.transactionType !== 'all') {
+      count += 1;
+    }
+
+    return count;
+  }, [value]);
+
+  React.useEffect(() => {
+    if (value !== InitialFormValues) {
+      form.setFieldsValue(value ?? InitialFormValues);
+    }
+  }, [value]);
+
   function handleSubmit(values: HistoryTableFilterValues) {
     setFiltersVisible(false);
-    onFiltersApply(values);
+    onChange(values);
   }
 
   const Content = (
@@ -107,7 +133,8 @@ const HistoryTableFilter: React.FC<Props> = props => {
       placement="bottomRight">
       <button type="button" className="button-ghost-monochrome pv-16 ml-auto">
         <Icon name="filter" className="mr-8" color="inherit" />
-        Filters
+        <span className="mr-8">Filters</span>
+        <AntdBadge count={countApplied} />
       </button>
     </Popover>
   );
