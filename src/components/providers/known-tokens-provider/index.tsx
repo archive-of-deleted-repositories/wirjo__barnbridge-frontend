@@ -3,6 +3,7 @@ import BigNumber from 'bignumber.js';
 import { AbiItem } from 'web3-utils';
 import Erc20Contract from 'web3/contracts/erc20Contract';
 
+// import Icon, { IconNames } from 'components/custom/icon';
 import { MainnetHttpsWeb3Provider } from 'components/providers/eth-web3-provider';
 import { useReload } from 'hooks/useReload';
 
@@ -16,8 +17,8 @@ export enum KnownTokens {
   USDC = 'USDC',
   DAI = 'DAI',
   SUSD = 'sUSD',
-  bbcUSDC = 'bbcUSDC',
-  bbcDAI = 'bbcDAI',
+  bbcUSDC = 'bb_cUSDC',
+  bbcDAI = 'bb_cDAI',
 }
 
 type TokenMeta = {
@@ -121,7 +122,7 @@ const KNOWN_TOKENS: TokenMeta[] = [
     name: 'BarnBridge cDAI',
     decimals: 18,
     priceFeed: '***REMOVED***', // bbcDAI -> USDC
-    pricePath: [KnownTokens.USDC],
+    pricePath: [KnownTokens.DAI],
     icon: 'token-dai',
   },
 ];
@@ -218,6 +219,7 @@ const KnownTokensProvider: FC = props => {
               token.price = usdcReserve.dividedBy(bondReserve);
             } else if (token.symbol === KnownTokens.bbcUSDC || token.symbol === KnownTokens.bbcDAI) {
               const priceFeedContract = new Erc20Contract(J_PRICE_FEED_ABI, token.priceFeed);
+              priceFeedContract.setCallProvider(MainnetHttpsWeb3Provider);
 
               const price = await priceFeedContract.call('price');
               token.price = new BigNumber(price).dividedBy(1e18);
