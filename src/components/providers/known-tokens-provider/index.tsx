@@ -43,6 +43,15 @@ export type TokenMeta = {
   contract?: Web3Contract;
 };
 
+export const EthToken: TokenMeta = {
+  address: '0x',
+  symbol: KnownTokens.ETH,
+  name: 'Ether',
+  decimals: 18,
+  priceFeed: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419', // ETH -> $
+  icon: 'token-eth',
+};
+
 export const BondToken: TokenMeta = {
   address: config.contracts.bond,
   symbol: KnownTokens.BOND,
@@ -62,6 +71,15 @@ export const UsdcToken: TokenMeta = {
   priceFeed: '0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6', // USDC -> $
   icon: 'token-usdc',
   contract: new Erc20Contract([], config.contracts.usdc),
+};
+
+export const UsdtToken: TokenMeta = {
+  address: '***REMOVED***',
+  symbol: KnownTokens.USDT,
+  name: 'Tether USD',
+  decimals: 6,
+  priceFeed: '0x4e58ab12d2051ea2068e78e4fcee7ddee6785848', // USDT -> $
+  icon: 'token-usdt',
 };
 
 export const DaiToken: TokenMeta = {
@@ -105,14 +123,7 @@ const KNOWN_TOKENS: TokenMeta[] = [
     priceFeed: '0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c', // BTC -> $
     icon: 'token-wbtc',
   },
-  {
-    address: '0x',
-    symbol: KnownTokens.ETH,
-    name: 'Ether',
-    decimals: 0,
-    priceFeed: '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419', // ETH -> $
-    icon: 'token-eth',
-  },
+  EthToken,
   {
     address: '***REMOVED***',
     symbol: KnownTokens.WETH,
@@ -142,14 +153,7 @@ const KNOWN_TOKENS: TokenMeta[] = [
   DaiToken,
   SusdToken,
   UniV2Token,
-  {
-    address: '***REMOVED***',
-    symbol: KnownTokens.USDT,
-    name: 'Tether USD',
-    decimals: 6,
-    priceFeed: '0x4e58ab12d2051ea2068e78e4fcee7ddee6785848', // USDT -> $
-    icon: 'token-usdt',
-  },
+  UsdtToken,
   {
     address: '***REMOVED***',
     symbol: KnownTokens.bbcUSDC,
