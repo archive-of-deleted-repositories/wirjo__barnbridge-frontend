@@ -66,6 +66,7 @@ jobs:
           REACT_APP_TOKEN_USDC_ADDR: '***REMOVED***'
           REACT_APP_TOKEN_DAI_ADDR: '***REMOVED***'
           REACT_APP_TOKEN_SUSD_ADDR: '***REMOVED***'
+          REACT_APP_TOKEN_GUSD_ADDR: '***REMOVED***'
           REACT_APP_TOKEN_USDT_ADDR: '***REMOVED***'
           REACT_APP_TOKEN_UNIV2_ADDR: '***REMOVED***'
           REACT_APP_TOKEN_BBC_USDC_ADDR: '***REMOVED***'
@@ -99,7 +100,7 @@ jobs:
       - name: Save artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: frontent-testnet
+          name: frontend-testnet
           path: build
 
       - name: Notify Slack success
